@@ -1,0 +1,201 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "SAGE",
+  "scopeName": "source.sage",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#section-separator" },
+    { "include": "#decision-marker" },
+    { "include": "#keywords-declaration" },
+    { "include": "#keywords-contract" },
+    { "include": "#keywords-spec" },
+    { "include": "#keywords-refinement" },
+    { "include": "#keywords-inferred" },
+    { "include": "#keywords-control" },
+    { "include": "#strings" },
+    { "include": "#operators" },
+    { "include": "#math-symbols" },
+    { "include": "#types" },
+    { "include": "#numbers" },
+    { "include": "#identifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.hash.sage",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "section-separator": {
+      "patterns": [
+        {
+          "name": "meta.separator.sage",
+          "match": "^-{3,}$"
+        }
+      ]
+    },
+    "decision-marker": {
+      "patterns": [
+        {
+          "name": "keyword.other.decision.sage",
+          "match": "!!"
+        }
+      ]
+    },
+    "keywords-declaration": {
+      "patterns": [
+        {
+          "name": "keyword.declaration.sage",
+          "match": "@(mod|type|fn|op|impl)\\b"
+        }
+      ]
+    },
+    "keywords-contract": {
+      "patterns": [
+        {
+          "name": "keyword.contract.sage",
+          "match": "@(req|ens)\\b"
+        }
+      ]
+    },
+    "keywords-spec": {
+      "patterns": [
+        {
+          "name": "keyword.spec.sage",
+          "match": "@(spec|state|invariant|property)\\b"
+        }
+      ]
+    },
+    "keywords-refinement": {
+      "patterns": [
+        {
+          "name": "keyword.refinement.sage",
+          "match": "@(refine|decision|preserves|maps|compare_with)\\b"
+        }
+      ]
+    },
+    "keywords-inferred": {
+      "patterns": [
+        {
+          "name": "keyword.inferred.sage",
+          "match": "@inferred_(req|ens|effect)\\b"
+        }
+      ]
+    },
+    "keywords-control": {
+      "patterns": [
+        {
+          "name": "keyword.control.sage",
+          "match": "\\b(let|if|else|ret|as)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.sage",
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.sage" } },
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.sage" } },
+          "patterns": [
+            {
+              "name": "constant.character.escape.sage",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.arrow.sage",
+          "match": "->|=>"
+        },
+        {
+          "name": "keyword.operator.comparison.sage",
+          "match": ">=|<=|==|!="
+        },
+        {
+          "name": "keyword.operator.logical.sage",
+          "match": "&&|\\|\\|"
+        },
+        {
+          "name": "keyword.operator.error-propagation.sage",
+          "match": "\\?"
+        },
+        {
+          "name": "keyword.operator.assignment.sage",
+          "match": "="
+        },
+        {
+          "name": "keyword.operator.arithmetic.sage",
+          "match": "[+\\-*/]"
+        },
+        {
+          "name": "keyword.operator.back-arrow.sage",
+          "match": "←"
+        }
+      ]
+    },
+    "math-symbols": {
+      "patterns": [
+        {
+          "name": "keyword.operator.quantifier.sage",
+          "match": "[∀∃]"
+        },
+        {
+          "name": "keyword.operator.set.sage",
+          "match": "∈"
+        },
+        {
+          "name": "keyword.operator.implication.sage",
+          "match": "⟹"
+        },
+        {
+          "name": "keyword.operator.summation.sage",
+          "match": "∑"
+        },
+        {
+          "name": "keyword.operator.checkmark.sage",
+          "match": "✓"
+        },
+        {
+          "name": "keyword.operator.prime.sage",
+          "match": "'"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "support.type.builtin.sage",
+          "match": "\\b(Str|Int|Bool|Time|Date|Money|Result|Set|Map)\\b"
+        },
+        {
+          "name": "entity.name.type.sage",
+          "match": "\\b[A-Z][a-zA-Z0-9]*\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.sage",
+          "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.sage",
+          "match": "\\b[a-z_][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    }
+  }
+}

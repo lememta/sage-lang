@@ -1,0 +1,15 @@
+{
+  "name": "sage-lang",
+  "private": true,
+  "description": "SAGE language toolkit - parser and VS Code extension",
+  "scripts": {
+    "build": "pnpm -r build",
+    "build:parser": "pnpm --filter @sage-lang/parser build",
+    "build:vscode": "pnpm --filter sage-vscode build",
+    "clean": "pnpm -r clean",
+    "test": "pnpm --filter @sage-lang/parser test"
+  },
+  "engines": {
+    "pnpm": ">=8"
+  }
+}

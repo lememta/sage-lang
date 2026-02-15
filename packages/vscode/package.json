@@ -1,0 +1,33 @@
+{
+  "name": "sage-vscode",
+  "displayName": "SAGE Language",
+  "description": "Syntax highlighting and language support for the SAGE specification language",
+  "version": "0.1.0",
+  "publisher": "sage-lang",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "sage",
+        "aliases": ["SAGE", "sage"],
+        "extensions": [".sage"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sage",
+        "scopeName": "source.sage",
+        "path": "./syntaxes/sage.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "echo 'VS Code extension ready'",
+    "clean": "echo 'nothing to clean'",
+    "package": "npx @vscode/vsce package --no-dependencies"
+  }
+}

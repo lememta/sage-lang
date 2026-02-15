@@ -1,0 +1,20 @@
+{
+  "name": "@sage-lang/parser",
+  "version": "0.1.0",
+  "description": "Lexer and recursive descent parser for the SAGE specification language",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "node --test dist/**/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["sage", "parser", "specification", "formal-methods"],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  }
+}
