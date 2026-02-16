@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100">
+  <defs>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ADE80"/>
+      <stop offset="100%" style="stop-color:#16A34A"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Icon -->
+  <g transform="translate(10, 10)">
+    <!-- Background circle -->
+    <circle cx="40" cy="40" r="38" fill="#0F172A"/>
+    
+    <!-- Sage leaf -->
+    <path d="M40 15 Q55 30 40 55 Q25 30 40 15" fill="url(#leafGrad)"/>
+    
+    <!-- Stem -->
+    <path d="M40 55 L40 70" stroke="#16A34A" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Side leaves -->
+    <path d="M30 42 Q18 35 20 45 Q28 50 30 42" fill="url(#leafGrad)"/>
+    <path d="M50 42 Q62 35 60 45 Q52 50 50 42" fill="url(#leafGrad)"/>
+    
+    <!-- ∀ symbol -->
+    <text x="40" y="42" font-family="serif" font-size="14" font-weight="bold" 
+          fill="#0F172A" text-anchor="middle" opacity="0.6">∀</text>
+    
+    <!-- Circuit dots -->
+    <circle cx="12" cy="28" r="3" fill="#3B82F6"/>
+    <circle cx="68" cy="28" r="3" fill="#3B82F6"/>
+    <circle cx="12" cy="55" r="3" fill="#3B82F6"/>
+    <circle cx="68" cy="55" r="3" fill="#3B82F6"/>
+    
+    <!-- Lines -->
+    <g stroke="#3B82F6" stroke-width="1" opacity="0.5">
+      <line x1="12" y1="28" x2="25" y2="35"/>
+      <line x1="68" y1="28" x2="55" y2="35"/>
+    </g>
+  </g>
+  
+  <!-- Text -->
+  <text x="105" y="62" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="#E2E8F0">
+    SAGE
+  </text>
+  
+  <!-- Tagline -->
+  <text x="105" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#64748B">
+    Semi-formal AI-Guided Engineering
+  </text>
+</svg>

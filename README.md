@@ -1,6 +1,12 @@
-# 🌿 SAGE
+<p align="center">
+  <img src="assets/logo.svg" alt="SAGE Logo" width="200" height="200">
+</p>
 
-**S**emi-formal **A**I-**G**uided **E**ngineering Language
+<h1 align="center">🌿 SAGE</h1>
+
+<p align="center">
+  <strong>S</strong>emi-formal <strong>A</strong>I-<strong>G</strong>uided <strong>E</strong>ngineering Language
+</p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="leaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ADE80"/>
+      <stop offset="100%" style="stop-color:#16A34A"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="64" cy="64" r="60" fill="#0F172A"/>
+  
+  <!-- Sage leaf (main) -->
+  <path d="M64 30 Q85 50 64 85 Q43 50 64 30" fill="url(#leaf)"/>
+  
+  <!-- Stem -->
+  <path d="M64 85 L64 105" stroke="#16A34A" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Side leaves -->
+  <path d="M50 65 Q30 55 35 70 Q45 75 50 65" fill="url(#leaf)" transform="rotate(-10 50 65)"/>
+  <path d="M78 65 Q98 55 93 70 Q83 75 78 65" fill="url(#leaf)" transform="rotate(10 78 65)"/>
+  
+  <!-- ∀ symbol (formal methods) -->
+  <text x="64" y="62" font-family="serif" font-size="20" font-weight="bold" 
+        fill="#0F172A" text-anchor="middle" opacity="0.6">∀</text>
+  
+  <!-- Circuit dots (AI) -->
+  <circle cx="28" cy="45" r="4" fill="#3B82F6"/>
+  <circle cx="100" cy="45" r="4" fill="#3B82F6"/>
+  <circle cx="28" cy="85" r="4" fill="#3B82F6"/>
+  <circle cx="100" cy="85" r="4" fill="#3B82F6"/>
+  
+  <!-- Connection lines -->
+  <g stroke="#3B82F6" stroke-width="1" opacity="0.5">
+    <line x1="28" y1="45" x2="43" y2="55"/>
+    <line x1="100" y1="45" x2="85" y2="55"/>
+    <line x1="28" y1="85" x2="43" y2="75"/>
+    <line x1="100" y1="85" x2="85" y2="75"/>
+  </g>
+</svg>
