@@ -192,6 +192,15 @@ pnpm build:parser
 pnpm test
 ```
 
+## Documentation
+
+- **[Tutorial](docs/tutorial.md)** — Learn SAGE in 15 minutes with hands-on examples
+- **[Token Efficiency](docs/token-efficiency.md)** — Why SAGE uses 38% fewer tokens
+- **[AGENT.md](AGENT.md)** — Instructions for LLMs to understand SAGE
+- **[SKILL.md](SKILL.md)** — OpenClaw-compatible skill file
+- **[SAGE_SPEC.md](SAGE_SPEC.md)** — Language specification
+- **[DESIGN.md](DESIGN.md)** — Design philosophy and examples
+
 ## Roadmap
 
 - [ ] Language Server Protocol (LSP) for VS Code
