@@ -450,6 +450,177 @@ Math symbols:
 
 ---
 
+## Using SAGE with Claude Code
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) is Anthropic's agentic coding tool that lives in your terminal. It can read files, write code, and execute commands. SAGE and Claude Code work beautifully together.
+
+### Setup: Add SAGE Understanding
+
+First, add the SAGE `AGENT.md` to your project so Claude Code understands the format:
+
+```bash
+# Copy AGENT.md to your project root
+cp path/to/sage-lang/AGENT.md ./AGENT.md
+```
+
+Or create a `CLAUDE.md` in your project with SAGE instructions:
+
+```markdown
+# CLAUDE.md
+
+## SAGE Specifications
+
+This project uses SAGE (.sage files) for specifications. When you see SAGE:
+
+- `"quoted text"` = requirements to implement
+- `!! "text"` = implementation decisions (don't change without asking)
+- `@req` = preconditions (validate these)
+- `@ens` = postconditions (ensure these)
+- `@type` = type definitions
+- `@fn` = function signatures
+
+Always implement all requirements and respect !! decisions.
+```
+
+### Workflow 1: Generate from Spec
+
+Write your spec first, then ask Claude Code to implement it:
+
+```bash
+# Create your spec
+cat > auth.sage << 'EOF'
+@mod auth
+
+@type User = { id: Str, email: Str, password_hash: Str }
+
+@fn register(email: Str, password: Str) -> Result<User>
+@req email.contains("@")
+@req password.len() >= 8
+@ens "Password is hashed with bcrypt"
+
+!! "Use bcrypt with cost 12"
+!! "Store users in PostgreSQL"
+EOF
+
+# Ask Claude Code to implement
+claude "Read auth.sage and implement it in TypeScript. Create src/auth.ts with all the functions. Validate all @req preconditions and follow the !! decisions."
+```
+
+### Workflow 2: Spec-Driven Development
+
+Use Claude Code interactively for spec-driven development:
+
+```bash
+# Start Claude Code
+claude
+
+# Then in the session:
+> Read auth.sage and explain what it specifies
+
+> Implement the register function from auth.sage in TypeScript
+
+> Now write unit tests that verify each @req and @ens
+
+> The spec says !! "Use bcrypt with cost 12" - verify the implementation uses this
+```
+
+### Workflow 3: Review Code Against Spec
+
+Have Claude Code verify implementations match specs:
+
+```bash
+claude "Compare src/auth.ts against auth.sage. Check:
+1. Are all @req preconditions validated?
+2. Are all @ens postconditions satisfied?
+3. Are all !! decisions followed?
+List any discrepancies."
+```
+
+### Workflow 4: Evolve Spec and Code Together
+
+When requirements change, update the spec first:
+
+```bash
+# Add rate limiting to the spec
+cat >> auth.sage << 'EOF'
+
+@fn login(email: Str, password: Str, ip: Str) -> Result<Session>
+@req "Rate limit: max 5 attempts per IP per minute"
+!! "Use Redis for rate limiting"
+EOF
+
+# Ask Claude Code to update the implementation
+claude "I've added a login function to auth.sage with rate limiting. Update src/auth.ts to implement it. Use the existing patterns from register."
+```
+
+### Pro Tips for Claude Code + SAGE
+
+1. **Keep specs in the repo** — Claude Code reads files, so it can always reference the spec
+
+2. **Use `!!` for non-negotiables** — Claude Code will respect these decisions:
+   ```sage
+   !! "Use PostgreSQL, not SQLite"
+   !! "All dates in UTC"
+   !! "Never log passwords"
+   ```
+
+3. **Ask for verification** — After generating code:
+   ```
+   > Verify src/auth.ts satisfies all contracts in auth.sage
+   ```
+
+4. **Iterate on the spec** — If Claude Code's output isn't right, improve the spec:
+   ```
+   > The register function doesn't check for duplicate emails. 
+     Add this to auth.sage: @req "Email must not already exist"
+     Then update the implementation.
+   ```
+
+5. **Generate tests from specs** — SAGE contracts map directly to tests:
+   ```
+   > Generate Jest tests for auth.sage. Each @req should have a test 
+     that verifies violations are rejected.
+   ```
+
+### Example Session
+
+```bash
+$ claude
+
+> Read payment.sage and summarize the key requirements
+
+Looking at payment.sage:
+- Payment type with id, amount, currency, status
+- process_payment function requires amount > 0 and <= 10000
+- Must use Stripe for processing (marked with !!)
+- Must generate UUID for transaction IDs (marked with !!)
+- Postcondition: payment recorded in database
+
+> Implement this in TypeScript with proper error handling
+
+Creating src/payment.ts...
+[generates implementation]
+
+> Does this implementation satisfy all the @ens postconditions?
+
+Checking postconditions:
+✓ "Payment is recorded in database" - Yes, line 45 calls db.insert()
+✓ "Transaction ID is unique" - Yes, using crypto.randomUUID()
+
+> Add a refund function to payment.sage, then implement it
+
+Adding to payment.sage:
+@fn refund(payment_id: Str) -> Result<Payment>
+@req "Original payment must exist"
+@req "Payment must be in Completed status"  
+@ens "Payment status changed to Refunded"
+!! "Call Stripe refund API"
+
+Updating src/payment.ts with refund function...
+```
+
+---
+
 ## Example Prompts for LLMs
 
 ### Generate Implementation
