@@ -433,17 +433,14 @@ Math symbols:
 
 1. **Install VS Code extension** for syntax highlighting:
    ```bash
-   cd packages/vscode
-   npx @vscode/vsce package --no-dependencies
-   code --install-extension sage-vscode-0.1.0.vsix
+   ./scripts/setup-vscode-lsp.sh
    ```
 
 2. **Read more examples** in the `examples/` folder
 
-3. **Try the parser** programmatically:
-   ```typescript
-   import { parse } from '@sage-lang/parser';
-   const ast = parse(sageCode);
+3. **Try the compiler** directly:
+   ```bash
+   .lake/build/bin/sage your-spec.sage
    ```
 
 4. **Add AGENT.md to your LLM** for better SAGE understanding

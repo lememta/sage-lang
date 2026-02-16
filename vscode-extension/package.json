@@ -1,0 +1,71 @@
+{
+  "name": "sage-lang",
+  "displayName": "SAGE Language Support",
+  "description": "Language support for SAGE (Semi-formal Agent Guidance & Engineering)",
+  "version": "0.1.0",
+  "publisher": "sage-lang",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:sage"
+  ],
+  "main": "./client/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "sage",
+        "aliases": [
+          "SAGE",
+          "sage"
+        ],
+        "extensions": [
+          ".sage"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "sage",
+        "scopeName": "source.sage",
+        "path": "./syntaxes/sage.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "SAGE",
+      "properties": {
+        "sage.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "echo 'Compiled'",
+    "watch": "echo 'Watching'",
+    "lint": "eslint .",
+    "pretest": "npm run compile && npm run lint"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.75.0",
+    "eslint": "^8.0.0"
+  }
+}

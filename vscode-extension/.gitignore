@@ -1,0 +1,19 @@
+# Node modules
+node_modules/
+client/node_modules/
+
+# Build outputs
+out/
+dist/
+*.vsix
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+*.swp
+
+# OS
+.DS_Store

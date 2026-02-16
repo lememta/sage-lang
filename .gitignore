@@ -1,28 +1,22 @@
-# Dependencies
-node_modules/
+# Lake build artifacts
+.lake/
+lake-packages/
+build/
 
-# Build outputs
-dist/
-*.vsix
+# Lean build outputs
+*.olean
+*.ilean
+*.trace
 
-# IDE
+# Lake manifest
+lake-manifest.json
+
+# Editor files
 .vscode/
-.idea/
 *.swp
 *.swo
+*~
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-
-# Test coverage
-coverage/
-
-# Env files
-.env
-.env.local

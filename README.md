@@ -1,236 +1,270 @@
-<p align="center">
-  <img src="assets/logo.svg" alt="SAGE Logo" width="200" height="200">
-</p>
+# SAGE Lean Implementation
 
-<h1 align="center">🌿 SAGE</h1>
+This directory contains the Lean 4 implementation of the SAGE language compiler and Language Server Protocol (LSP) server.
 
-<p align="center">
-  <strong>S</strong>emi-formal <strong>A</strong>I-<strong>G</strong>uided <strong>E</strong>ngineering Language
-</p>
+## Structure
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![VS Code](https://img.shields.io/badge/VS%20Code-Extension-blueviolet.svg)](packages/vscode)
-
-> A specification language that scales from napkin sketches to formal verification. Write specs the way you think — SAGE meets you where you are.
-
-## Why SAGE?
-
-Most spec languages force a choice: stay informal (and imprecise) or go formal (and slow). SAGE says **why not both?**
-
-```sage
-# Level 0: Quick idea
-"Build user auth with email/password"
-"Rate limit login attempts"
-!! "Use bcrypt"
-
-# Level 1: Add structure when ready
-@fn login(email: Str, password: Str) -> Result<Session>
-@req email.is_valid()
-@ens "Session created on success"
-
-# Level 2: Go formal when it matters
-@invariant ∀ s ∈ sessions: ∃ u ∈ users: s.user_id = u.id
+```
+lean/
+├── lakefile.lean           # Lake build configuration
+├── Sage.lean              # Main module exports
+├── Main.lean              # CLI compiler entry point
+├── MainLSP.lean           # LSP server entry point
+├── build.sh               # Build script
+└── Sage/
+    ├── Token.lean         # Token types
+    ├── Lexer.lean         # Lexical analyzer
+    ├── AST.lean           # Abstract syntax tree
+    ├── Parser.lean        # Parser
+    ├── TypeCheck.lean     # Type checker
+    └── LSP/
+        ├── Types.lean     # LSP protocol types
+        ├── Analysis.lean  # SAGE code analysis
+        └── Server.lean    # LSP server implementation
 ```
 
-**Start informal. Formalize incrementally. SAGE grows with your needs.**
+## Prerequisites
 
-## Features
+- [Lean 4](https://leanprover.github.io/lean4/doc/setup.html) (latest stable version)
+- [Lake](https://github.com/leanprover/lake) (Lean's build tool, comes with Lean 4)
 
-- 📝 **Natural language first** — Quoted strings are valid specs
-- 🔧 **Structured when needed** — Types, functions, contracts
-- 🔬 **Formal when critical** — Invariants, refinements, proofs
-- 🤖 **LLM-friendly** — Designed for AI-assisted development
-- ✨ **VS Code support** — Syntax highlighting out of the box
+## Building
 
-## Installation
+### Build Everything
 
 ```bash
-# Clone and install
-git clone https://github.com/yourusername/sage-lang.git
-cd sage-lang
-pnpm install
-pnpm build
+./build.sh
 ```
 
-### VS Code Extension
+This builds:
+- `sage` - The SAGE compiler CLI
+- `sage-lsp` - The SAGE Language Server
+- `test` - The comprehensive test suite
+
+### Build Individual Targets
 
 ```bash
-cd packages/vscode
-npx @vscode/vsce package --no-dependencies
-code --install-extension sage-vscode-0.1.0.vsix
+# Build compiler only
+lake build sage
+
+# Build LSP server only
+lake build sage-lsp
+
+# Build test suite only
+lake build test
+
+# Clean build artifacts
+lake clean
 ```
 
-## Quick Start
+## Usage
 
-### Using the Parser
+### Compiler
 
-```typescript
-import { parse } from '@sage-lang/parser';
-
-const ast = parse(`
-@mod todo_app
-
-@type Task = {
-  id: Int,
-  title: Str,
-  completed: Bool
-}
-
-@fn create_task(title: Str) -> Result<Task>
-@req title.len() > 0 && title.len() < 200
-@ens "Task is created with completed = false"
-`);
-
-console.log(ast);
+```bash
+.lake/build/bin/sage examples/level1-structured.sage
 ```
 
-### Writing SAGE Specs
+### Language Server
 
-Create a `.sage` file:
+The LSP server is designed to be used with VS Code. See the VS Code extension setup below.
 
-```sage
-@mod payment_service
-"Handle money transfers securely"
-
-@type Account = {
-  id: Str,
-  balance: Money
-}
-
-@fn transfer(from: Account, to: Account, amount: Money) -> Result<()>
-"Move money between accounts"
-@req amount > 0
-@req from.balance >= amount
-@ens from.balance' = from.balance - amount
-@ens to.balance' = to.balance + amount
-
-!! "Use database transactions"
-!! "Log all transfers for audit"
+To run manually:
+```bash
+.lake/build/bin/sage-lsp
 ```
 
-## Formality Levels
+## VS Code Extension with LSP
 
-| Level | Use When | Constructs |
-|-------|----------|------------|
-| **0 — Natural** | Quick ideas, prototypes | `"quoted strings"`, `!!` decisions |
-| **1 — Structured** | Production code | `@type`, `@fn`, `@req`, `@ens` |
-| **2 — Formal** | Critical systems | `@spec`, `@invariant`, `@refine`, `@preserves` |
+### Quick Setup
 
-See [`examples/`](examples/) for complete files at each level.
+From the repository root:
 
-## Syntax Reference
-
-### Core Constructs
-
-| Syntax | Purpose | Example |
-|--------|---------|---------|
-| `@mod name` | Module declaration | `@mod user_auth` |
-| `@type Name = {...}` | Type definition | `@type User = { email: Str }` |
-| `@fn name(...) -> T` | Function signature | `@fn login(email: Str) -> Result<Session>` |
-| `@req condition` | Precondition | `@req amount > 0` |
-| `@ens condition` | Postcondition | `@ens "User created"` |
-| `"string"` | Natural language / comment | `"Validate the input"` |
-| `!!` | Implementation decision | `!! "Use Redis for caching"` |
-| `---` | Section separator | |
-
-### Formal Constructs
-
-| Syntax | Purpose | Example |
-|--------|---------|---------|
-| `@spec Name` | Specification block | `@spec PaymentSystem` |
-| `@state` | State declaration | `@state accounts: Map<Id, Account>` |
-| `@invariant` | Invariant expression | `@invariant ∀ a ∈ accounts: a.balance >= 0` |
-| `@refine A as B` | Refinement | `@refine Spec as ConcreteImpl` |
-| `@decision` | Design decision | `@decision "Use 2PC for distributed txns"` |
-| `@preserves` | Preserved properties | `@preserves ✓ "Money conservation"` |
-| `@impl` | Implementation block | `@impl ConcreteImpl` |
-
-### Control Flow
-
-```sage
-let result = some_call()
-if condition => ret Err("failed")
-ret Ok(value)
+```bash
+./scripts/setup-vscode-lsp.sh
 ```
 
-### Math Symbols
+This will:
+1. Build the LSP server
+2. Install extension dependencies
+3. Install the extension to VS Code
 
-SAGE supports mathematical notation: `∀` `∃` `∈` `⟹` `∑` `'` (prime for post-state)
+Then restart VS Code.
 
-## Project Structure
+### Manual Setup
 
-```
-sage-lang/
-├── packages/
-│   ├── parser/          # TypeScript parser (lexer + AST)
-│   │   ├── src/
-│   │   │   ├── lexer.ts
-│   │   │   ├── parser.ts
-│   │   │   └── ast.ts
-│   │   └── dist/        # Compiled output
-│   └── vscode/          # VS Code extension
-│       ├── syntaxes/
-│       │   └── sage.tmLanguage.json
-│       └── language-configuration.json
-├── examples/            # Sample .sage files
-│   ├── level0-natural.sage
-│   ├── level1-structured.sage
-│   ├── level2-formal.sage
-│   └── inferred.sage
-├── SAGE_SPEC.md         # Language specification
-└── DESIGN.md            # Design philosophy & examples
-```
+1. Build the LSP server:
+   ```bash
+   lake build sage-lsp
+   ```
+
+2. Install the extension:
+   ```bash
+   cp -r vscode-extension ~/.vscode/extensions/sage-lang-lsp-0.1.0
+   ```
+
+3. Restart VS Code
+
+### Features
+
+The LSP extension provides:
+- **Syntax highlighting** - Color coding for SAGE constructs
+- **Real-time diagnostics** - Parse and type errors as you type
+- **File watching** - Automatic updates when files change
 
 ## Development
 
+### Project Structure
+
+The implementation follows a standard compiler pipeline:
+
+1. **Lexer** (`Sage/Lexer.lean`) - Tokenizes source text
+2. **Parser** (`Sage/Parser.lean`) - Builds AST from tokens
+3. **Type Checker** (`Sage/TypeCheck.lean`) - Validates types and semantics
+4. **LSP Server** (`Sage/LSP/Server.lean`) - Provides IDE integration
+
+### Adding Features
+
+To add new language features:
+
+1. Add token types to `Sage/Token.lean`
+2. Update lexer in `Sage/Lexer.lean`
+3. Add AST nodes to `Sage/AST.lean`
+4. Update parser in `Sage/Parser.lean`
+5. Add type checking rules in `Sage/TypeCheck.lean`
+6. Update LSP analysis in `Sage/LSP/Analysis.lean`
+
+### Testing
+
+#### Run Test Suite
+
 ```bash
-# Install dependencies
-pnpm install
-
-# Build everything
-pnpm build
-
-# Build just the parser
-pnpm build:parser
-
-# Run tests
-pnpm test
+# Run comprehensive test suite
+.lake/build/bin/test
 ```
 
-## Documentation
+This runs all tests including:
+- Sample framework tests
+- Lexer component tests
+- Parser component tests
+- Type checker tests
+- Integration tests (end-to-end pipeline)
 
-- **[Tutorial](docs/tutorial.md)** — Learn SAGE in 15 minutes with hands-on examples
-- **[Token Efficiency](docs/token-efficiency.md)** — Why SAGE uses 38% fewer tokens
-- **[AGENT.md](AGENT.md)** — Instructions for LLMs to understand SAGE
-- **[SKILL.md](SKILL.md)** — OpenClaw-compatible skill file
-- **[SAGE_SPEC.md](SAGE_SPEC.md)** — Language specification
-- **[DESIGN.md](DESIGN.md)** — Design philosophy and examples
+#### Test Individual Components
 
-## Roadmap
+```bash
+# Test the compiler with example files
+.lake/build/bin/sage examples/level0-natural.sage
+.lake/build/bin/sage examples/level1-structured.sage
+.lake/build/bin/sage examples/level2-formal.sage
 
-- [ ] Language Server Protocol (LSP) for VS Code
-- [ ] CLI tool for parsing and validation
-- [ ] Integration with popular LLMs
-- [ ] Code generation backends (TypeScript, Python, Rust)
-- [ ] Formal verification tooling
+# Test LSP (requires VS Code)
+# Open a .sage file and check for diagnostics
+```
 
-## Philosophy
+## Implementation Status
 
-> "Refinement is POWER, not BURDEN. Use it when it helps. Skip it when it doesn't."
+### Completed
+- ✅ Token definitions (60+ token types)
+- ✅ AST structure
+- ✅ Full lexer implementation
+- ✅ Complete parser implementation
+- ✅ Type checker with semantic validation
+- ✅ Comprehensive test framework
+- ✅ LSP server with JSON-RPC
+- ✅ VS Code extension integration
+- ✅ Real-time diagnostics
 
-SAGE believes:
-- **Natural language is valid** — Don't force formality before it's needed
-- **Incrementalism works** — Start simple, add rigor over time
-- **AI is a partner** — Design for human-AI collaboration
-- **Decisions matter** — Track the "why" with `!!` and `@decision`
+### In Progress
+- 🚧 Advanced type inference
+- 🚧 Contract verification
+
+### Planned
+- ⏳ Code completion
+- ⏳ Go to definition
+- ⏳ Find references
+- ⏳ Hover information
+- ⏳ Code actions
+- ⏳ Formal verification support
+
+## Architecture
+
+### Compiler Pipeline
+
+```
+Source Code (.sage)
+    ↓
+Lexer (tokenize)
+    ↓
+Tokens
+    ↓
+Parser (parse)
+    ↓
+AST (Program)
+    ↓
+Type Checker (typeCheck)
+    ↓
+Validated Program
+```
+
+### LSP Server
+
+The LSP server runs as a separate process and communicates with VS Code via JSON-RPC over stdio:
+
+```
+VS Code ←→ JSON-RPC ←→ sage-lsp ←→ SAGE Compiler
+```
+
+The server maintains document state and provides diagnostics on:
+- File open (`textDocument/didOpen`)
+- File change (`textDocument/didChange`)
+- Diagnostic request (`textDocument/diagnostic`)
+
+## Troubleshooting
+
+### LSP server not starting
+
+1. Check the server is built:
+   ```bash
+   ls -la lean/.lake/build/bin/sage-lsp
+   ```
+
+2. Check VS Code output:
+   - Open VS Code
+   - View → Output
+   - Select "SAGE Language Server" from dropdown
+
+3. Test server manually:
+   ```bash
+   echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | .lake/build/bin/sage-lsp
+   ```
+
+### Extension not loading
+
+1. Check extension is installed:
+   ```bash
+   ls -la ~/.vscode/extensions/sage-lang-lsp-0.1.0
+   ```
+
+2. Check for errors:
+   - Help → Toggle Developer Tools
+   - Check Console tab for errors
+
+3. Reload VS Code:
+   - Cmd+Shift+P → "Developer: Reload Window"
 
 ## Contributing
 
-Contributions welcome! Please read the design docs first:
-- [SAGE_SPEC.md](SAGE_SPEC.md) — Language specification
-- [DESIGN.md](DESIGN.md) — Design philosophy and examples
+When contributing to the Lean implementation:
 
-## License
+1. Follow Lean 4 style guidelines
+2. Add documentation comments for public functions
+3. Test with example `.sage` files
+4. Update this README if adding new features
 
-MIT © 2026
+## Resources
+
+- [Lean 4 Documentation](https://leanprover.github.io/lean4/doc/)
+- [Lake Build System](https://github.com/leanprover/lake)
+- [LSP Specification](https://microsoft.github.io/language-server-protocol/)
+- [SAGE Language Spec](../SAGE_SPEC.md)
