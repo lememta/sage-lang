@@ -3,6 +3,7 @@ import Sage.AST
 import Sage.Lexer
 import Sage.Parser
 import Sage.TypeCheck
+import Sage.Verify
 
 namespace SageTest.Integration
 
@@ -172,9 +173,51 @@ def regressionTests : List (String × (Unit → TestResult)) := [
     testFullPipeline "\"This system manages user sessions\" \"Users can login and logout\" !!")
 ]
 
+-- Machine-verifiable contract integration tests
+def verificationPipelineTests : List (String × (Unit → TestResult)) := [
+  ("Full pipeline: function with effects", fun _ =>
+    let input := "@mod io_module @fn readFile @effect IO -> String"
+    testFullPipeline input),
+
+  ("Full pipeline: function with @pure", fun _ =>
+    let input := "@mod pure_module @fn add @pure -> Int"
+    testFullPipeline input),
+
+  ("Full pipeline: function with @decreases", fun _ =>
+    let input := "@mod rec_module @fn factorial @decreases n -> Nat"
+    testFullPipeline input),
+
+  ("Full pipeline: type with @invariant", fun _ =>
+    let input := "@mod inv_module @type Balance = Int @invariant balance >= 0"
+    testFullPipeline input),
+
+  ("Full pipeline: function with contracts and effects", fun _ =>
+    let input := "@mod complex @fn transfer @req \"Amount positive\" @ens \"Balance updated\" @effect IO @effect Mutation -> Bool"
+    testFullPipeline input),
+
+  ("Full pipeline: refinement type", fun _ =>
+    let input := "@mod typed @type PosInt = { x : Int | x > 0 }"
+    testFullPipeline input),
+
+  ("Verification detects contradictory effects", fun _ =>
+    let input := "@mod bad @fn broken @pure @effect IO -> String"
+    -- This should parse OK but fail type checking due to contradictory effects
+    let tokens := Sage.tokenize input
+    match Sage.parse tokens with
+    | none => TestResult.fail "Should parse"
+    | some prog =>
+      match Sage.typeCheck prog with
+      | .error _ => TestResult.pass  -- TypeCheck catches pure+IO
+      | .ok _ =>
+        -- If type checker doesn't catch it, verifier should
+        let result := Sage.verifyProgram prog
+        if result.messages.any (fun m => m.severity == .error) then TestResult.pass
+        else TestResult.fail "Should detect contradictory effects")
+]
+
 -- All integration tests
 def allIntegrationTests : List (String × (Unit → TestResult)) :=
   pipelineTests ++ componentIntegrationTests ++ realWorldScenarioTests ++
-  performanceTests ++ errorRecoveryTests ++ regressionTests
+  performanceTests ++ errorRecoveryTests ++ regressionTests ++ verificationPipelineTests
 
 end SageTest.Integration

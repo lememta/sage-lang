@@ -205,8 +205,83 @@ def complexTests : List (String × (Unit → TestResult)) := [
     else TestResult.fail s!"Expected at least 8 tokens for function signature, got {tokens.length}")
 ]
 
+-- Machine-verifiable contract token tests
+def verificationKeywordTests : List (String × (Unit → TestResult)) := [
+  ("@effect keyword", fun _ =>
+    let tokens := Sage.tokenize "@effect"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.effect
+    | none => TestResult.fail "No tokens produced"),
+
+  ("@decreases keyword", fun _ =>
+    let tokens := Sage.tokenize "@decreases"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.decreases
+    | none => TestResult.fail "No tokens produced"),
+
+  ("@pure keyword", fun _ =>
+    let tokens := Sage.tokenize "@pure"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.pure_
+    | none => TestResult.fail "No tokens produced"),
+
+  ("@total keyword", fun _ =>
+    let tokens := Sage.tokenize "@total"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.total
+    | none => TestResult.fail "No tokens produced"),
+
+  ("@partial keyword", fun _ =>
+    let tokens := Sage.tokenize "@partial"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.partial_
+    | none => TestResult.fail "No tokens produced"),
+
+  ("forall keyword (ASCII)", fun _ =>
+    let tokens := Sage.tokenize "forall"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.forall_
+    | none => TestResult.fail "No tokens produced"),
+
+  ("exists keyword (ASCII)", fun _ =>
+    let tokens := Sage.tokenize "exists"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.exists_
+    | none => TestResult.fail "No tokens produced"),
+
+  ("∀ symbol (Unicode forall)", fun _ =>
+    let tokens := Sage.tokenize "∀"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.forall_
+    | none => TestResult.fail "No tokens produced"),
+
+  ("∃ symbol (Unicode exists)", fun _ =>
+    let tokens := Sage.tokenize "∃"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.exists_
+    | none => TestResult.fail "No tokens produced"),
+
+  ("∈ symbol (element of)", fun _ =>
+    let tokens := Sage.tokenize "∈"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.elementOf
+    | none => TestResult.fail "No tokens produced"),
+
+  ("∑ symbol (summation)", fun _ =>
+    let tokens := Sage.tokenize "∑"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.summation
+    | none => TestResult.fail "No tokens produced"),
+
+  ("where keyword", fun _ =>
+    let tokens := Sage.tokenize "where"
+    match tokens.head? with
+    | some token => assertTokenType token Sage.TokenType.where_
+    | none => TestResult.fail "No tokens produced")
+]
+
 -- All lexer tests
 def allLexerTests : List (String × (Unit → TestResult)) :=
-  keywordTests ++ operatorTests ++ punctuationTests ++ literalTests ++ unicodeTests ++ complexTests
+  keywordTests ++ operatorTests ++ punctuationTests ++ literalTests ++ unicodeTests ++ complexTests ++ verificationKeywordTests
 
 end SageTest.Lexer

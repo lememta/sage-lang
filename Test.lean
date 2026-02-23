@@ -3,6 +3,7 @@ import Sage.AST
 import Sage.Lexer
 import Sage.Parser
 import Sage.TypeCheck
+import Sage.Verify
 
 namespace SageTest
 
@@ -186,9 +187,73 @@ def integrationTests : List TestCase := [
       | none => TestResult.fail "Parsing failed" }
 ]
 
+-- Verification engine tests
+def verificationTests : List TestCase := [
+  { name := "Verify: empty program",
+    test := fun _ =>
+      let prog : Sage.Program := ⟨[]⟩
+      let result := Sage.verifyProgram prog
+      if result.hasErrors then TestResult.fail "Empty program should verify"
+      else TestResult.pass },
+
+  { name := "Verify: pure function is valid",
+    test := fun _ =>
+      let func : Sage.Function := {
+        name := "add", params := [], returnType := Sage.SageType.name "Int",
+        requires := [], ensures := [], body := [], effects := [Sage.Effect.pure]
+      }
+      let module : Sage.Module := {
+        name := "math", imports := [], types := [], functions := [func], naturalText := []
+      }
+      let result := Sage.verifyProgram ⟨[module]⟩
+      if result.hasErrors then TestResult.fail "Pure function should verify"
+      else TestResult.pass },
+
+  { name := "Verify: contradictory effects detected",
+    test := fun _ =>
+      let func : Sage.Function := {
+        name := "bad", params := [], returnType := Sage.SageType.name "String",
+        requires := [], ensures := [], body := [],
+        effects := [Sage.Effect.pure, Sage.Effect.io]
+      }
+      let module : Sage.Module := {
+        name := "test", imports := [], types := [], functions := [func], naturalText := []
+      }
+      let result := Sage.verifyProgram ⟨[module]⟩
+      if result.hasErrors then TestResult.pass
+      else TestResult.fail "Pure + IO should be detected as error" },
+
+  { name := "Verify: recursive function needs @decreases",
+    test := fun _ =>
+      let func : Sage.Function := {
+        name := "loop", params := [], returnType := Sage.SageType.name "Unit",
+        requires := [], ensures := [],
+        body := [Sage.Stmt.expr (Sage.Expr.call "loop" [])]
+      }
+      let module : Sage.Module := {
+        name := "test", imports := [], types := [], functions := [func], naturalText := []
+      }
+      let result := Sage.verifyProgram ⟨[module]⟩
+      if result.hasErrors then TestResult.pass
+      else TestResult.fail "Recursive without @decreases should error" },
+
+  { name := "Verify: refinement type with false predicate",
+    test := fun _ =>
+      let typeDecl : Sage.TypeDecl := {
+        name := "Empty",
+        definition := Sage.SageType.refined "x" (Sage.SageType.name "Int") (Sage.Expr.bool false)
+      }
+      let module : Sage.Module := {
+        name := "test", imports := [], types := [typeDecl], functions := [], naturalText := []
+      }
+      let result := Sage.verifyProgram ⟨[module]⟩
+      if result.hasErrors then TestResult.pass
+      else TestResult.fail "False refinement predicate should error" }
+]
+
 -- All tests combined
 def allTests : List TestCase :=
-  sampleTests ++ lexerTests ++ parserTests ++ typeCheckerTests ++ integrationTests
+  sampleTests ++ lexerTests ++ parserTests ++ typeCheckerTests ++ integrationTests ++ verificationTests
 
 end SageTest
 
@@ -212,7 +277,10 @@ def main (args : List String) : IO UInt32 := do
   IO.println "\nRunning Integration Tests..."
   let integrationFailures ← SageTest.runTests SageTest.integrationTests
 
-  let totalFailures := sampleFailures + lexerFailures + parserFailures + typeCheckerFailures + integrationFailures
+  IO.println "\nRunning Verification Tests..."
+  let verificationFailures ← SageTest.runTests SageTest.verificationTests
+
+  let totalFailures := sampleFailures + lexerFailures + parserFailures + typeCheckerFailures + integrationFailures + verificationFailures
   let totalTests := SageTest.allTests.length
   let passedTests := totalTests - totalFailures
 

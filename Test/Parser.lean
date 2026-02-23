@@ -215,9 +215,131 @@ def errorHandlingTests : List (String × (Unit → TestResult)) := [
     )
 ]
 
+-- 8.1 Refinement type parsing tests
+def refinementTypeTests : List (String × (Unit → TestResult)) := [
+  ("Refinement type declaration", fun _ =>
+    match parseFromString "@mod test @type PosInt = { x : Int | x > 0 }" with
+    | some prog =>
+      if prog.modules.length > 0 then
+        let module := prog.modules.head!
+        if module.types.length > 0 then
+          let typeDecl := module.types.head!
+          match typeDecl.definition with
+          | .refined _ _ _ => TestResult.pass
+          | _ => TestResult.fail "Expected refinement type"
+        else TestResult.fail "Expected at least one type declaration"
+      else TestResult.fail "Expected at least one module"
+    | none => TestResult.fail "Parser should handle refinement type")
+]
+
+-- 8.2 Pre/Post condition parsing tests
+def contractParsingTests : List (String × (Unit → TestResult)) := [
+  ("Function with multiple @req", fun _ =>
+    match parseFromString "@mod test @fn validate @req \"Input is valid\" @req \"User is authenticated\" -> Bool" with
+    | some prog =>
+      if prog.modules.length > 0 then
+        let module := prog.modules.head!
+        if module.functions.length > 0 then
+          let func := module.functions.head!
+          if func.requires.length >= 2 then TestResult.pass
+          else TestResult.fail s!"Expected 2+ preconditions, got {func.requires.length}"
+        else TestResult.fail "Expected function"
+      else TestResult.fail "Expected module"
+    | none => TestResult.fail "Parser should handle multiple contracts"),
+
+  ("Function with @req and @ens", fun _ =>
+    match parseFromString "@mod test @fn process @req \"Input valid\" @ens \"Output correct\" -> Bool" with
+    | some prog =>
+      if prog.modules.length > 0 then
+        let module := prog.modules.head!
+        if module.functions.length > 0 then
+          let func := module.functions.head!
+          if !func.requires.isEmpty && !func.ensures.isEmpty then TestResult.pass
+          else TestResult.fail "Expected both @req and @ens"
+        else TestResult.fail "Expected function"
+      else TestResult.fail "Expected module"
+    | none => TestResult.fail "Parser should handle req + ens")
+]
+
+-- 8.3 Invariant parsing tests
+def invariantParsingTests : List (String × (Unit → TestResult)) := [
+  ("Type with @invariant", fun _ =>
+    match parseFromString "@mod test @type Balance = Int @invariant balance >= 0" with
+    | some prog =>
+      if prog.modules.length > 0 then
+        let module := prog.modules.head!
+        if module.types.length > 0 then
+          let typeDecl := module.types.head!
+          if !typeDecl.invariants.isEmpty then TestResult.pass
+          else TestResult.fail "Expected at least one invariant"
+        else TestResult.fail "Expected type declaration"
+      else TestResult.fail "Expected module"
+    | none => TestResult.fail "Parser should handle type invariants")
+]
+
+-- 8.4 Effect tracking parsing tests
+def effectParsingTests : List (String × (Unit → TestResult)) := [
+  ("Function with @effect IO", fun _ =>
+    match parseFromString "@mod test @fn readFile @effect IO -> String" with
+    | some prog =>
+      if prog.modules.length > 0 then
+        let module := prog.modules.head!
+        if module.functions.length > 0 then
+          let func := module.functions.head!
+          if func.effects.any (· == Sage.Effect.io) then TestResult.pass
+          else TestResult.fail "Expected IO effect"
+        else TestResult.fail "Expected function"
+      else TestResult.fail "Expected module"
+    | none => TestResult.fail "Parser should handle @effect"),
+
+  ("Function with @pure", fun _ =>
+    match parseFromString "@mod test @fn add @pure -> Int" with
+    | some prog =>
+      if prog.modules.length > 0 then
+        let module := prog.modules.head!
+        if module.functions.length > 0 then
+          let func := module.functions.head!
+          if func.effects.any (· == Sage.Effect.pure) then TestResult.pass
+          else TestResult.fail "Expected pure effect"
+        else TestResult.fail "Expected function"
+      else TestResult.fail "Expected module"
+    | none => TestResult.fail "Parser should handle @pure"),
+
+  ("Function with multiple effects", fun _ =>
+    match parseFromString "@mod test @fn transfer @effect IO @effect Mutation -> Bool" with
+    | some prog =>
+      if prog.modules.length > 0 then
+        let module := prog.modules.head!
+        if module.functions.length > 0 then
+          let func := module.functions.head!
+          if func.effects.length >= 2 then TestResult.pass
+          else TestResult.fail s!"Expected 2+ effects, got {func.effects.length}"
+        else TestResult.fail "Expected function"
+      else TestResult.fail "Expected module"
+    | none => TestResult.fail "Parser should handle multiple effects")
+]
+
+-- 8.5 Termination parsing tests
+def terminationParsingTests : List (String × (Unit → TestResult)) := [
+  ("Function with @decreases", fun _ =>
+    match parseFromString "@mod test @fn factorial @decreases n -> Int" with
+    | some prog =>
+      if prog.modules.length > 0 then
+        let module := prog.modules.head!
+        if module.functions.length > 0 then
+          let func := module.functions.head!
+          if func.decreases.isSome then TestResult.pass
+          else TestResult.fail "Expected termination measure"
+        else TestResult.fail "Expected function"
+      else TestResult.fail "Expected module"
+    | none => TestResult.fail "Parser should handle @decreases")
+]
+
 -- All parser tests
 def allParserTests : List (String × (Unit → TestResult)) :=
   basicParsingTests ++ moduleTests ++ typeDeclarationTests ++ functionTests ++
-  naturalLanguageTests ++ complexTests ++ errorHandlingTests
+  naturalLanguageTests ++ complexTests ++ errorHandlingTests ++
+  refinementTypeTests ++ contractParsingTests ++ invariantParsingTests ++
+  effectParsingTests ++ terminationParsingTests
 
 end SageTest.Parser

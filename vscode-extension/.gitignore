@@ -7,6 +7,9 @@ out/
 dist/
 *.vsix
 
+# Bundled binary (too large for git; built via `lake build sage-lsp`)
+bin/
+
 # Logs
 *.log
 npm-debug.log*

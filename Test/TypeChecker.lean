@@ -3,6 +3,7 @@ import Sage.AST
 import Sage.Lexer
 import Sage.Parser
 import Sage.TypeCheck
+import Sage.Verify
 
 namespace SageTest.TypeChecker
 
@@ -281,8 +282,251 @@ def performanceTests : List (String × (Unit → TestResult)) := [
     assertOk (Sage.typeCheck prog) "Large number of functions should pass")
 ]
 
+-- ═══ Machine-Verifiable Contract Tests ═══
+
+-- 8.1 Refinement type verification tests
+def refinementTypeVerifyTests : List (String × (Unit → TestResult)) := [
+  ("Refinement type with valid predicate", fun _ =>
+    let typeDecl : Sage.TypeDecl := {
+      name := "PosInt",
+      definition := Sage.SageType.refined "x" (Sage.SageType.name "Int")
+        (Sage.Expr.binOp ">" (Sage.Expr.ident "x") (Sage.Expr.num 0.0))
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [typeDecl], functions := [], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then
+      TestResult.fail "Valid refinement type should not produce errors"
+    else TestResult.pass),
+
+  ("Refinement type with trivially false predicate", fun _ =>
+    let typeDecl : Sage.TypeDecl := {
+      name := "Empty",
+      definition := Sage.SageType.refined "x" (Sage.SageType.name "Int") (Sage.Expr.bool false)
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [typeDecl], functions := [], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then TestResult.pass
+    else TestResult.fail "Trivially false refinement should produce error"),
+
+  ("Refinement type with trivially true predicate", fun _ =>
+    let typeDecl : Sage.TypeDecl := {
+      name := "AnyInt",
+      definition := Sage.SageType.refined "x" (Sage.SageType.name "Int") (Sage.Expr.bool true)
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [typeDecl], functions := [], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .warning) then TestResult.pass
+    else TestResult.fail "Trivially true refinement should produce warning")
+]
+
+-- 8.2 Contract verification tests
+def contractVerifyTests : List (String × (Unit → TestResult)) := [
+  ("Function with valid contracts", fun _ =>
+    let func : Sage.Function := {
+      name := "validate",
+      params := [("email", Sage.SageType.name "String")],
+      returnType := Sage.SageType.name "Bool",
+      requires := [Sage.Expr.lit "email is valid"],
+      ensures := [Sage.Expr.lit "result indicates success or failure"],
+      body := []
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then
+      TestResult.fail "Valid contracts should not produce errors"
+    else TestResult.pass),
+
+  ("Function with contradictory preconditions", fun _ =>
+    let func : Sage.Function := {
+      name := "check",
+      params := [("x", Sage.SageType.name "Int")],
+      returnType := Sage.SageType.name "Bool",
+      requires := [
+        Sage.Expr.binOp ">" (Sage.Expr.ident "x") (Sage.Expr.num 5.0),
+        Sage.Expr.binOp "<" (Sage.Expr.ident "x") (Sage.Expr.num 3.0)
+      ],
+      ensures := [], body := []
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then TestResult.pass
+    else TestResult.fail "Contradictory preconditions should produce error")
+]
+
+-- 8.3 Invariant verification tests
+def invariantVerifyTests : List (String × (Unit → TestResult)) := [
+  ("Type with valid invariant", fun _ =>
+    let typeDecl : Sage.TypeDecl := {
+      name := "Balance",
+      definition := Sage.SageType.name "Int",
+      invariants := [Sage.Expr.binOp ">=" (Sage.Expr.ident "balance") (Sage.Expr.num 0.0)]
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [typeDecl], functions := [], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then
+      TestResult.fail "Valid invariant should not produce errors"
+    else TestResult.pass),
+
+  ("Function returning invariant-bearing type without postcondition", fun _ =>
+    let typeDecl : Sage.TypeDecl := {
+      name := "Balance",
+      definition := Sage.SageType.name "Int",
+      invariants := [Sage.Expr.binOp ">=" (Sage.Expr.ident "balance") (Sage.Expr.num 0.0)]
+    }
+    let func : Sage.Function := {
+      name := "withdraw",
+      params := [], returnType := Sage.SageType.name "Balance",
+      requires := [], ensures := [], body := []
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [typeDecl], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .warning) then TestResult.pass
+    else TestResult.fail "Missing postcondition on invariant-bearing return type should warn")
+]
+
+-- 8.4 Effect tracking verification tests
+def effectVerifyTests : List (String × (Unit → TestResult)) := [
+  ("Function with valid IO effect", fun _ =>
+    let func : Sage.Function := {
+      name := "readFile",
+      params := [], returnType := Sage.SageType.name "String",
+      requires := [], ensures := [], body := [],
+      effects := [Sage.Effect.io]
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then
+      TestResult.fail "Valid IO effect should not produce errors"
+    else TestResult.pass),
+
+  ("Contradictory effects: pure + IO", fun _ =>
+    let func : Sage.Function := {
+      name := "broken",
+      params := [], returnType := Sage.SageType.name "String",
+      requires := [], ensures := [], body := [],
+      effects := [Sage.Effect.pure, Sage.Effect.io]
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then TestResult.pass
+    else TestResult.fail "Pure + IO should produce error"),
+
+  ("Duplicate effect warning", fun _ =>
+    let func : Sage.Function := {
+      name := "dup",
+      params := [], returnType := Sage.SageType.name "String",
+      requires := [], ensures := [], body := [],
+      effects := [Sage.Effect.io, Sage.Effect.io]
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .warning) then TestResult.pass
+    else TestResult.fail "Duplicate effects should produce warning")
+]
+
+-- 8.5 Termination verification tests
+def terminationVerifyTests : List (String × (Unit → TestResult)) := [
+  ("Recursive function without @decreases should error", fun _ =>
+    -- A function that calls itself in its body
+    let func : Sage.Function := {
+      name := "loop",
+      params := [],
+      returnType := Sage.SageType.name "Unit",
+      requires := [], ensures := [],
+      body := [Sage.Stmt.expr (Sage.Expr.call "loop" [])]
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then TestResult.pass
+    else TestResult.fail "Recursive function without @decreases should error"),
+
+  ("Recursive function with valid @decreases", fun _ =>
+    let func : Sage.Function := {
+      name := "factorial",
+      params := [("n", Sage.SageType.name "Nat")],
+      returnType := Sage.SageType.name "Nat",
+      requires := [], ensures := [],
+      body := [Sage.Stmt.expr (Sage.Expr.call "factorial" [Sage.Expr.ident "n"])],
+      decreases := some (Sage.Expr.ident "n")
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then
+      TestResult.fail "Recursive function with valid @decreases should not error"
+    else TestResult.pass),
+
+  ("Non-recursive function with unnecessary @decreases", fun _ =>
+    let func : Sage.Function := {
+      name := "add",
+      params := [], returnType := Sage.SageType.name "Int",
+      requires := [], ensures := [], body := [],
+      decreases := some (Sage.Expr.ident "n")
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .warning) then TestResult.pass
+    else TestResult.fail "Non-recursive with @decreases should warn"),
+
+  ("Recursive function with constant @decreases should error", fun _ =>
+    let func : Sage.Function := {
+      name := "loop",
+      params := [],
+      returnType := Sage.SageType.name "Unit",
+      requires := [], ensures := [],
+      body := [Sage.Stmt.expr (Sage.Expr.call "loop" [])],
+      decreases := some (Sage.Expr.num 42.0)
+    }
+    let module : Sage.Module := {
+      name := "test", imports := [], types := [], functions := [func], naturalText := []
+    }
+    let prog : Sage.Program := ⟨[module]⟩
+    let result := Sage.verifyProgram prog
+    if result.messages.any (fun m => m.severity == .error) then TestResult.pass
+    else TestResult.fail "Constant @decreases should error")
+]
+
 -- All type checker tests
 def allTypeCheckerTests : List (String × (Unit → TestResult)) :=
-  basicTests ++ typeDeclarationTests ++ functionTests ++ integrationTests ++ edgeCaseTests ++ performanceTests
+  basicTests ++ typeDeclarationTests ++ functionTests ++ integrationTests ++ edgeCaseTests ++ performanceTests ++
+  refinementTypeVerifyTests ++ contractVerifyTests ++ invariantVerifyTests ++ effectVerifyTests ++ terminationVerifyTests
 
 end SageTest.TypeChecker

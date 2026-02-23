@@ -40,15 +40,27 @@
       "patterns": [
         {
           "name": "keyword.control.sage",
-          "match": "\\b(let|if|else|for|in|match|ret|as)\\b"
+          "match": "\\b(let|if|else|for|in|match|ret|as|where|forall|exists)\\b"
         },
         {
           "name": "keyword.other.sage",
           "match": "@(mod|use|type|fn|spec|refine|test|impl|req|ens|invariant|state|init|ops|decisions|maps|preserves|given|when|then|validates|at_level|property|refines|inferred_req|inferred_ens)"
         },
         {
+          "name": "keyword.other.verification.sage",
+          "match": "@(effect|decreases|pure|total|partial)"
+        },
+        {
           "name": "constant.language.sage",
           "match": "\\b(true|false)\\b"
+        },
+        {
+          "name": "support.type.effect.sage",
+          "match": "\\b(IO|Mutation|Exception|Diverge|Pure)\\b"
+        },
+        {
+          "name": "keyword.operator.quantifier.sage",
+          "match": "[∀∃∈∑⟹]"
         }
       ]
     },

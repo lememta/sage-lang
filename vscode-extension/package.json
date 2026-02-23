@@ -1,20 +1,50 @@
 {
   "name": "sage-lang",
   "displayName": "SAGE Language Support",
-  "description": "Language support for SAGE (Semi-formal Agent Guidance & Engineering)",
+  "description": "Language support for SAGE — a semi-formal specification language with machine-verifiable contracts, effect tracking, and termination proofs.",
   "version": "0.1.0",
   "publisher": "sage-lang",
+  "icon": "icon.png",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gheghen/sage-lang"
+  },
   "engines": {
     "vscode": "^1.75.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "sage",
+    "specification",
+    "formal verification",
+    "contracts",
+    "effects"
   ],
   "activationEvents": [
     "onLanguage:sage"
   ],
   "main": "./client/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "sage.verifyContract",
+        "title": "Verify Contract",
+        "category": "SAGE"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "sage.verifyContract",
+          "when": "editorLangId == sage",
+          "group": "1_modification"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "sage",

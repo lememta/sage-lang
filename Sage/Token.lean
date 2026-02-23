@@ -15,6 +15,10 @@ inductive TokenType where
   | lparen | rparen | lbrace | rbrace | lbracket | rbracket
   | comma | colon | dot | semicolon
   | important | as_ | checkmark | crossmark
+  -- Machine-verifiable contracts tokens
+  | effect | decreases | pure_ | total | partial_
+  | forall_ | exists_ | elementOf | summation
+  | where_
   | eof
   deriving Repr, BEq, Inhabited
 
